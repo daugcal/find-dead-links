@@ -6,8 +6,23 @@ from bs4 import BeautifulSoup
 def urlCrawl(url, depth):
     raw = requests.get(url)
     soup = BeautifulSoup(raw.content, features='html.parser')
-    for link in soup.find_all('a', href=True):
-        print (link)
+    
+    goodLinks=[]
+    for rawRef in soup.find_all('a', href=True):
+        link= rawRef.get("href")
+        try:
+            if link.startswith("/"):
+                link = url+link
+            if requests.get(link).status_code not in [200, 302]:
+                print("BAD LINK: %s" % link)
+            else:
+                goodLinks.append(link)        
+        except:
+            print("BAD LINK: %s" % link)
+    if depth != 0:
+        for goodLink in goodLinks:
+            urlCrawl(goodLink, depth-1)
+
 
 if __name__ == '__main__':
     from sys import argv
